@@ -91,7 +91,7 @@ void start()
 	gotoxy(80,15);
 	printf("第一代版本BUG在所难免，祝您游戏愉快！");
 	gotoxy(80,19);
-	
+	printf("制作者：鸣蜩十五");
 	gotoxy(80,20);
 	printf("QQ：1468488197");
 } 
