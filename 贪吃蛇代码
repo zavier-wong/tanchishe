@@ -1,0 +1,294 @@
+#include <stdio.h>
+#include <windows.h>
+#include <stdlib.h> 
+#include <conio.h>
+#include <time.h>
+#define row 70
+#define col 25
+
+void gotoxy(int x,int y);
+void creat_wall(int x,int y);
+void goto_print(int x,int y);
+void goto_print_wally(int x,int y);
+void goto_print_wallx(int x,int y);
+void goto_delete(int x,int y);
+int body_move();
+int body_change();
+void random_food();
+int get_food();
+struct snake *add_to_list(struct snake *list,int x,int y);
+struct snake *remove_last(struct snake *list);
+void end_game();
+int judge(); 
+void start();
+void wait();
+
+int map[row][col];
+struct snake{
+	int x;
+	int y;
+	struct snake *next;
+};
+struct food{
+	int x;
+	int y;
+}food;
+
+int speed,score=0;
+int direction;//左1右2上3下4 
+int life=1;
+struct snake *head=NULL;
+
+int main()
+{
+	start();
+	random_food();
+	system("color 70");
+	creat_wall(row,col);
+	
+	body_change();//press q to quit
+	end_game();	
+}
+
+void wait()
+{
+	int i=100,j=0,x;
+	gotoxy(40,20);
+	printf("Game lording:");
+	while(i)
+	{
+	printf("\\%%%2d",++j);
+	Sleep(20);
+	printf("\b\b\b\b|%%%2d",++j);
+	Sleep(20);
+	printf("\b\b\b\b/%%%2d",++j);
+	Sleep(20);
+	printf("\b\b\b\b-%%%2d",++j);
+	if(j==100)
+	break;
+	Sleep(20);
+	printf("\b\b\b\b");
+	printf("=");
+	i--;
+	}gotoxy(40,21);
+	printf("Load complete!\n\n");
+}
+void start()
+{
+	wait();
+	gotoxy(45,10);
+	printf("请输入游戏级别（1~99）："); 
+	scanf("%d",&speed);
+	system("CLS");
+	gotoxy(80,7);
+	printf("■贪吃蛇大作战■");
+	gotoxy(80,10);
+	printf("你的成绩为："); 
+	gotoxy(80,13);
+	printf("操作方式");
+	gotoxy(80,14);
+	printf("W-上 A-左 D-右 S-下 q-退出");
+	gotoxy(80,15);
+	printf("第一代版本BUG在所难免，祝您游戏愉快！");
+	gotoxy(80,19);
+	
+	gotoxy(80,20);
+	printf("QQ：1468488197");
+} 
+void end_game()
+{
+	system("CLS");
+	gotoxy(45,10);
+	printf("You Die!");
+	getch();
+}
+
+int body_move()
+{
+	if(judge()==0)
+		return 1;
+	switch (direction)
+	{
+		case 1: head=add_to_list(head,head->x-1,head->y);break;
+		case 2:	head=add_to_list(head,head->x+1,head->y);break;
+		case 3:	head=add_to_list(head,head->x,head->y-1);break;
+		case 4:	head=add_to_list(head,head->x,head->y+1);break;
+	}
+	goto_print(head->x,head->y);
+	if(get_food())
+	{
+		score++;
+		gotoxy(93,10);
+		printf("%d",score);
+		random_food();
+		return 0;
+	}
+	head=remove_last(head);
+	return 0;
+}
+
+int body_change()
+{
+	head=add_to_list(head,row/2,col/2);
+	goto_print(head->x,head->y);
+	direction=2;
+	char c;
+	do{
+		while(!_kbhit()){
+			if(body_move())
+				return 0;
+			Sleep(10*speed);
+		}
+		c=_getch();
+		switch (c)
+		{
+			case 'w':
+			case 'W':
+				if(head->y-1>0&&direction!=3&&direction!=4)
+				{
+					direction=3;
+					body_move(); 
+				}break;
+			case 'a':
+			case 'A':
+				if(head->x-2>0&&direction!=1&&direction!=2)
+				{
+					direction=1;
+					body_move(); 
+				}break;
+			case 'd':
+			case 'D':
+				if(head->x+2<row&&direction!=2&&direction!=1)
+				{
+					direction=2;
+					body_move(); 
+				}break;
+			case 's':
+			case 'S':
+				if(head->y+1<col&&direction!=4&&direction!=3)
+				{	
+					direction=4;
+					body_move(); 
+				}break;
+			case 27: case 'Q':
+			case 'q':return 0;
+		}
+	} 
+	while(1);
+}
+
+struct snake *add_to_list(struct snake *list,int x,int y)
+{
+	struct snake *new_node;
+	
+	new_node = (snake *)malloc(sizeof(struct snake));
+	if(new_node == NULL){
+		printf("malloc memory failed\n\n");
+		exit(EXIT_FAILURE);
+	}
+	new_node->x = x;
+	new_node->y = y;
+	new_node->next = list;
+	return new_node;
+}
+
+struct snake *remove_last(struct snake *list)
+{
+	
+	struct snake *prev = NULL,*cur = list;
+	
+	for(;cur->next != NULL;
+		prev = cur,cur = cur->next)
+		;
+	goto_delete(cur->x,cur->y);
+	prev->next = cur->next;
+	free(cur);
+
+	return list;
+}
+
+void gotoxy(int x,int y)
+{
+	COORD pos={x,y};
+	
+	HANDLE hOut;
+	hOut=GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(hOut,pos);
+//	SetConsoleTextAttribute(hOut,0x01|0x05);//文本颜色 
+}
+
+void goto_print(int x,int y)
+{
+	COORD pos={x,y};
+	
+	HANDLE hOut;
+	hOut=GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(hOut,pos);
+//	SetConsoleTextAttribute(hOut,0x01|0xff0000);
+	printf("*");
+}
+
+void goto_print_wally(int x,int y)
+{
+	gotoxy(x,y);
+	printf("||");
+}
+void goto_print_wallx(int x,int y)
+{
+	gotoxy(x,y);
+	printf("#");
+}
+void goto_delete(int x,int y)
+{
+	gotoxy(x,y);
+	printf(" ");
+}
+void creat_wall(int x,int y)
+{
+	int i;
+	for(i=0;i<x;i++)
+	{
+		goto_print_wallx(i,0);
+		goto_print_wallx(i,y);
+	}
+	for(i=0;i<y;i++)
+	{
+		goto_print_wally(0,i);
+		goto_print_wally(x,i);
+	}
+}
+
+int judge()
+{
+	struct snake *list;
+	if(head->x==1||head->x==row||head->y==0||head->y==col)
+	life=0;
+	for(list=head->next;list!=NULL;list=list->next)
+	{
+		if(head->x==list->x&&head->y==list->y)
+		{
+			life=0;
+			break;
+		}
+	 } 
+	return life;
+}
+
+int get_food()
+{
+	if(head->x==food.x&&head->y==food.y)
+	return 1; 
+	return 0; 
+} 
+
+void random_food()
+{
+	int x,y;
+	srand((unsigned)time(NULL));
+	x=rand()%66+3;
+	y=rand()%22+2;
+	food.x=x;
+	food.y=y;
+	gotoxy(food.x,food.y);
+	printf("*");
+}
